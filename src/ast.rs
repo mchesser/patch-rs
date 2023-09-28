@@ -1,6 +1,7 @@
 use std::borrow::Cow;
 use std::fmt;
 
+#[cfg(feature = "chrono")]
 use chrono::{DateTime, FixedOffset};
 
 use crate::parser::{parse_multiple_patches, parse_single_patch, ParseError};
@@ -193,6 +194,7 @@ impl<'a> fmt::Display for File<'a> {
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub enum FileMetadata<'a> {
     /// A complete datetime, e.g. `2002-02-21 23:30:39.942229878 -0800`
+    #[cfg(feature = "chrono")]
     DateTime(DateTime<FixedOffset>),
     /// Any other string provided after the file path, e.g. git hash, unrecognized timestamp, etc.
     Other(Cow<'a, str>),
@@ -201,6 +203,7 @@ pub enum FileMetadata<'a> {
 impl<'a> fmt::Display for FileMetadata<'a> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
+            #[cfg(feature = "chrono")]
             FileMetadata::DateTime(datetime) => {
                 write!(f, "{}", datetime.format("%F %T%.f %z"))
             }

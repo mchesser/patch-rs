@@ -1,6 +1,7 @@
 use std::borrow::Cow;
 use std::error::Error;
 
+#[cfg(feature = "chrono")]
 use chrono::DateTime;
 use nom::*;
 use nom::{
@@ -137,12 +138,15 @@ fn header_line_content(input: Input<'_>) -> IResult<Input<'_>, File> {
             meta: after.and_then(|after| match after {
                 Cow::Borrowed("") => None,
                 Cow::Borrowed("\t") => None,
+                #[cfg(feature = "chrono")]
                 _ => Some(
                     DateTime::parse_from_str(after.as_ref(), "%F %T%.f %z")
                         .or_else(|_| DateTime::parse_from_str(after.as_ref(), "%F %T %z"))
                         .ok()
                         .map_or_else(|| FileMetadata::Other(after), FileMetadata::DateTime),
                 ),
+                #[cfg(not(feature = "chrono"))]
+                _ => Some(FileMetadata::Other(after)),
             }),
         },
     ))
@@ -413,7 +417,7 @@ mod tests {
         ));
 
         let sample2b = "\
---- lao	
+--- lao
 +++ tzu	\n";
         test_parser!(headers(sample2b) -> (
             File {path: "lao".into(), meta: None},
